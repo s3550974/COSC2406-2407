@@ -11,10 +11,24 @@ public class dbload{
 		String dataFileDir = "C:/Users/Coffee/Documents/COSC2406-2407/";
 		String line;
 
-		if(args[0].equals("-p")){
-			pagesize = Integer.parseInt(args[1]);
-			datafile = args[2];
+		String bn_name;
+		String bn_status;
+		String bn_reg_dt;
+		String bn_cancel_dt;
+		String bn_renew_dt;
+
+		for(int i = 0; i < 2; i++){
+			if(args[i].equals("-p")){
+				pagesize = Integer.parseInt(args[i + 1]);
+				if(i == 0){
+					datafile = args[2];
+				}else{
+					datafile = args[0];
+				}
+			}
 		}
+		System.out.println("data: " + datafile);
+		System.out.println("page: " + pagesize);
 
 		try{
 			br = new BufferedReader(new FileReader(dataFileDir + datafile));
