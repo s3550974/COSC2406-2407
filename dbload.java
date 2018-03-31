@@ -138,7 +138,6 @@ public class dbload{
 		}finally {
 			if (br != null){
 				try{
-					//os.close(); //not sure why os.close doesn't work :c
 					br.close();
 				} catch (IOException e){
 					e.printStackTrace();
