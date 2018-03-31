@@ -135,6 +135,9 @@ public class dbload{
 					}
 				}
 			}
+			for(int i=0; i<(recordPerPage-currRec)*recordSize+remainderPage; i++){
+				os.write(0);
+			}
 		}catch (FileNotFoundException e){
 			e.printStackTrace();
 		}catch (IOException e) {
