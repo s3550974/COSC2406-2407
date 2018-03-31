@@ -22,9 +22,6 @@ public class dbload{
 		BufferedReader br = null;
 		String csvDelimiter = "\t";
 		String line;
-		//fix this later
-		String dataFileDir = "C:/Users/Coffee/Documents/COSC2406-2407/";
-
 		//declare database variables
 		String bn_name;
 		String bn_status;
@@ -52,15 +49,17 @@ public class dbload{
 			stateRegSize +
 			abnSize;
 
+		//error checking: pagesize must be larger than record size
+		if(pagesize<recordSize){
+			System.out.println("Page size must be larger or equal to " + recordSize + "\nDbload will not run.");
+			System.exit(0);
+		}
 		int recordPerPage = pagesize/recordSize;
 		int remainderPage = pagesize%recordSize;
-		System.out.println("record: " + recordSize);
-		System.out.println("page: " + pagesize);
-		System.out.println("rec in page: " + recordPerPage);
-		System.out.println("rem in page: " + remainderPage);
 
 		//read csv file line by line
 		try{
+			//declare readers
 			br = new BufferedReader(new FileReader(datafile));
 			DataOutputStream os = new DataOutputStream(new FileOutputStream("heapfile." + pagesize));
 			//skip first line
@@ -68,7 +67,7 @@ public class dbload{
 			//for each line
 			int currRec = 0;
 			while((line = br.readLine()) != null){
-				//separate 
+				//separate the line
 				String[] split = line.split(csvDelimiter);
 				bn_name = split[1];
 				bn_status = split[2];
@@ -114,6 +113,7 @@ public class dbload{
 				byte[] byteABN = bn_abn.getBytes();
 				byte[] paddedABN = Arrays.copyOf(byteABN, abnSize);
 
+				//write to file
 				os.write(paddedName);
 				os.writeBoolean(bolStatus);
 				os.write(paddedRegDate);
@@ -122,6 +122,7 @@ public class dbload{
 				os.write(paddedStateNum);
 				os.writeShort(shtState);
 				os.write(paddedABN);
+				//check page padding
 				currRec++;
 				if(currRec == recordPerPage){
 					currRec = 0;
@@ -137,12 +138,14 @@ public class dbload{
 		}finally {
 			if (br != null){
 				try{
+					//os.close(); //not sure why os.close doesn't work :c
 					br.close();
 				} catch (IOException e){
 					e.printStackTrace();
 				}
 			}
 		}
+		System.out.println("headfile." + pagesize + " has been created.");
 	}//main
 
 	//convert state to short
