@@ -20,6 +20,7 @@ public class dbload{
 
 		//declare csv reading variables
 		BufferedReader br = null;
+		DataOutputStream os = null;
 		String csvDelimiter = "\t";
 		String line;
 		//declare database variables
@@ -61,7 +62,7 @@ public class dbload{
 		try{
 			//declare readers
 			br = new BufferedReader(new FileReader(datafile));
-			DataOutputStream os = new DataOutputStream(new FileOutputStream("heapfile." + pagesize));
+			os = new DataOutputStream(new FileOutputStream("heapfile." + pagesize));
 			//skip first line
 			br.readLine();
 			//for each line
@@ -139,6 +140,13 @@ public class dbload{
 			if (br != null){
 				try{
 					br.close();
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+			}
+			if (os != null){
+				try{
+					os.close();
 				} catch (IOException e){
 					e.printStackTrace();
 				}
