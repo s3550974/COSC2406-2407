@@ -56,8 +56,16 @@ public class dbload{
 				bn_reg_dt = split[3];
 				bn_cancel_dt = split[4];
 				bn_renew_dt = split[5];
-				bn_state_num = split[6];
-				bn_state_of_reg = split[7];
+				try{
+					bn_state_num = split[6];
+				} catch (IndexOutOfBoundsException e){
+					bn_state_num = "";
+				}
+				try{
+					bn_state_of_reg = split[7];
+				} catch (IndexOutOfBoundsException e){
+					bn_state_of_reg = "";
+				}
 				//sometimes this ends at 8, so try catch to make it null
 				try{
 					bn_abn = split[8];
@@ -138,5 +146,5 @@ public class dbload{
 		mapState.put("WA", (short)6);
 		mapState.put("TAS", (short)7);
 		mapState.put("NT", (short)8);
-	}
+	}//Map
 }//class
