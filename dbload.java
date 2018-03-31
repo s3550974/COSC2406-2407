@@ -2,6 +2,7 @@ import java.io.*;
 import java.util.*;
 
 public class dbload{
+	//declare terminal arguments
 	static int pageSize;
 	static String dataFile;
 
@@ -52,7 +53,9 @@ public class dbload{
 
 		//error checking: pageSize must be larger than record size
 		if(pageSize<recordSize){
-			System.out.println("Page size must be larger or equal to " + recordSize + "\nDbload will not run.");
+			System.out.println(
+				"Page size must be larger or equal to " + recordSize + 
+				"\nDbload will not run.");
 			System.exit(0);
 		}
 		int recordPerPage = pageSize/recordSize;

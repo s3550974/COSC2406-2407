@@ -25,6 +25,36 @@ public class dbquery{
 		if(debug)System.out.println("Query: " + query);
 		if(debug)System.out.println("File: " + fileName);
 		if(debug)System.out.println("Page size: " + pageSize);
+		
+		//declare variables
+		int pageOffset = 0;
+		int recordOffset = 0;
+		int recordSize = 263;
+		int recordPerPage = pageSize/recordSize;
+		int remainderPage = pageSize%recordSize;
+		int nameSize = 200;
+
+		RandomAccessFile in = null;
+		try{
+			in = new RandomAccessFile(fileName, "r");
+			in.seek(0);
+			byte[] test = new byte[nameSize];
+			in.read(test);
+			String nameTest = new String(test);
+			System.out.println(nameTest);
+		}catch (FileNotFoundException e){
+			e.printStackTrace();
+		}catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			if (in != null){
+				try{
+					in.close();
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+			}
+		}
 	}//main
 
 	//convert state to short
