@@ -2,18 +2,18 @@ import java.io.*;
 import java.util.*;
 
 public class dbload{
-	static int pagesize;
-	static String datafile;
+	static int pageSize;
+	static String dataFile;
 
 	public static void main (String[] args){
 		//read terminal arguments
 		for(int i = 0; i < 2; i++){
 			if(args[i].equals("-p")){
-				pagesize = Integer.parseInt(args[i + 1]);
+				pageSize = Integer.parseInt(args[i + 1]);
 				if(i == 0){
-					datafile = args[2];
+					dataFile = args[2];
 				}else{
-					datafile = args[0];
+					dataFile = args[0];
 				}
 			}
 		}
@@ -50,19 +50,19 @@ public class dbload{
 			stateRegSize +
 			abnSize;
 
-		//error checking: pagesize must be larger than record size
-		if(pagesize<recordSize){
+		//error checking: pageSize must be larger than record size
+		if(pageSize<recordSize){
 			System.out.println("Page size must be larger or equal to " + recordSize + "\nDbload will not run.");
 			System.exit(0);
 		}
-		int recordPerPage = pagesize/recordSize;
-		int remainderPage = pagesize%recordSize;
+		int recordPerPage = pageSize/recordSize;
+		int remainderPage = pageSize%recordSize;
 
 		//read csv file line by line
 		try{
 			//declare readers
-			br = new BufferedReader(new FileReader(datafile));
-			os = new DataOutputStream(new FileOutputStream("heapfile." + pagesize));
+			br = new BufferedReader(new FileReader(dataFile));
+			os = new DataOutputStream(new FileOutputStream("heapfile." + pageSize));
 			//skip first line
 			br.readLine();
 			//for each line
@@ -152,7 +152,7 @@ public class dbload{
 				}
 			}
 		}
-		System.out.println("headfile." + pagesize + " has been created.");
+		System.out.println("headfile." + pageSize + " has been created.");
 	}//main
 
 	//convert state to short
