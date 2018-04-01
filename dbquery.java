@@ -113,7 +113,7 @@ public class dbquery{
 						regDateSize + cancelDateSize);
 					byte[] readRenewDate = new byte[renewDateSize];
 					in.read(readRenewDate);
-					bn_renew_dt = new String(readRegDate);
+					bn_renew_dt = new String(readRenewDate);
 
 					//give state number a value
 					in.seek(
