@@ -63,7 +63,7 @@ public class dbquery{
 		RandomAccessFile in = null;
 		try{
 			startTime = System.nanoTime();
-			in = new RandomAccessFile("heapfile."+pageSize, "r");
+			in = new RandomAccessFile("heap."+pageSize, "r");
 			while(true){
 				//declare current offset
 				int currOffset = currRec * recordSize + pageOffset * pageSize;

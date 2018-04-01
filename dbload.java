@@ -75,7 +75,7 @@ public class dbload{
 		try{
 			//declare readers
 			br = new BufferedReader(new FileReader(dataFile));
-			os = new DataOutputStream(new FileOutputStream("heapfile." + pageSize));
+			os = new DataOutputStream(new FileOutputStream("heap." + pageSize));
 			//skip first line
 			br.readLine();
 			//for each line
