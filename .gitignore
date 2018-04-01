@@ -7,3 +7,5 @@ binout.dat
 BUSINESS_NAMES_201803.csv
 heapfile.4096
 *.csv~
+testInput.csv
+testInput2.csv
