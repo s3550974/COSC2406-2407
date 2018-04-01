@@ -3,17 +3,15 @@ import java.util.*;
 
 public class dbquery{
 	static String query;
-	static String fileName;
 	static int pageSize;
 
 	public static void main (String[] args){
 		//read terminal arguments
 		if(args.length == 2){
 			query = args[0];
-			fileName = args[1];
+			String strPage = args[1];
 			try{
-				String[] split = fileName.split("\\.");
-				pageSize = Integer.parseInt(split[1]);
+				pageSize = Integer.parseInt(strPage);
 			} catch (IndexOutOfBoundsException e){
 				System.out.println("Page size must be an integer.");
 				System.exit(0);
@@ -58,7 +56,7 @@ public class dbquery{
 		//Random Access File to move to and fro of a binary file
 		RandomAccessFile in = null;
 		try{
-			in = new RandomAccessFile(fileName, "r");
+			in = new RandomAccessFile("heapfile."+pageSize, "r");
 			while(true){
 				//declare current offset
 				int currOffset = currRec * recordSize + pageOffset * pageSize;
@@ -108,7 +106,32 @@ public class dbquery{
 						regDateSize + cancelDateSize);
 					byte[] readRenewDate = new byte[renewDateSize];
 					in.read(readRenewDate);
-					bn_reg_dt = new String(readRegDate);
+					bn_renew_dt = new String(readRegDate);
+
+					//give state number a value
+					in.seek(
+						currOffset + nameSize + statusSize + 
+						regDateSize + cancelDateSize + renewDateSize);
+					byte[] readStateNum = new byte[stateNumSize];
+					in.read(readStateNum);
+					bn_state_num = new String(readStateNum);
+
+					//give state of reg a value
+					in.seek(
+						currOffset + nameSize + statusSize + 
+						regDateSize + cancelDateSize + renewDateSize +
+						stateNumSize);
+					short shtState = in.readShort();
+					bn_state_of_reg = mapState.get(shtState);
+					
+					//give abn a value
+					in.seek(
+						currOffset + nameSize + statusSize + 
+						regDateSize + cancelDateSize + renewDateSize +
+						stateNumSize + stateRegSize);
+					byte[] readABN = new byte[abnSize];
+					in.read(readABN);
+					bn_abn = new String(readABN);
 
 					//print!
 					System.out.println(
@@ -117,7 +140,10 @@ public class dbquery{
 						"\nRegister status: " + bn_status +
 						"\nRegister date: " + bn_reg_dt +
 						"\nCancel date: " + bn_cancel_dt +
-						"\nRenew date: " + bn_reg_dt +
+						"\nRenew date: " + bn_renew_dt +
+						"\nState number: " + bn_state_num +
+						"\nState of registration: " + bn_state_of_reg +
+						"\nABN: " + bn_abn +
 						"\n");
 				}
 				//increment record and page offset
