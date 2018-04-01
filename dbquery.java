@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class dbquery{
 	static String query;
@@ -44,7 +45,7 @@ public class dbquery{
 		int recordPerPage = pageSize/recordSize;
 		int remainderPage = pageSize%recordSize;
 
-		//convert query to bytes
+		//convert query to byte array
 		byte[] byteQuery = query.getBytes();
 		byte[] paddedQuery = Arrays.copyOf(byteQuery, nameSize);
 		//used to check if array is empty
@@ -52,10 +53,16 @@ public class dbquery{
 		
 		//counter for current record in page
 		int currRec = 0;
+		
+		//declare time to see how long queries take
+		long startTime = 0;
+		long endTime = 0;
+		long totalTime = 0;
 
 		//Random Access File to move to and fro of a binary file
 		RandomAccessFile in = null;
 		try{
+			startTime = System.nanoTime();
 			in = new RandomAccessFile("heapfile."+pageSize, "r");
 			while(true){
 				//declare current offset
@@ -166,6 +173,10 @@ public class dbquery{
 			if (in != null){
 				try{
 					in.close();
+					endTime = System.nanoTime();
+					totalTime = endTime - startTime;
+					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+					System.out.println("Queries found in " + msTime + " ms.");
 				} catch (IOException e){
 					e.printStackTrace();
 				}

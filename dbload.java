@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class dbload{
 	//declare terminal arguments
@@ -61,8 +62,14 @@ public class dbload{
 		int recordPerPage = pageSize/recordSize;
 		int remainderPage = pageSize%recordSize;
 		
+		//counters to keep track of how many pages and records there are
 		int recordCtr = 0;
 		int pageCtr = 1;
+
+		//declare time to see how long queries take
+		long startTime = 0;
+		long endTime = 0;
+		long totalTime = 0;
 
 		//read csv file line by line
 		try{
@@ -164,8 +171,11 @@ public class dbload{
 				}
 			}
 		}
+		endTime = System.nanoTime();
+		totalTime = endTime - startTime;
+		long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
 		System.out.println(
-				"headfile." + pageSize + " has been created" +
+				"headfile." + pageSize + " has been created in " + msTime + "ms." +
 				"\nNo of records loaded: " + recordCtr +
 				"\nNo of pages used: " + pageCtr + 
 				"\n");
