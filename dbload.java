@@ -60,6 +60,9 @@ public class dbload{
 		}
 		int recordPerPage = pageSize/recordSize;
 		int remainderPage = pageSize%recordSize;
+		
+		int recordCtr = 0;
+		int pageCtr = 1;
 
 		//read csv file line by line
 		try{
@@ -90,6 +93,7 @@ public class dbload{
 				}
 				try{
 					bn_abn = split[8];
+					bn_abn = bn_abn.replace("\n", "");
 				} catch (IndexOutOfBoundsException e){
 					bn_abn = "";
 				}
@@ -128,8 +132,10 @@ public class dbload{
 				os.write(paddedABN);
 				//check page padding
 				currRec++;
+				recordCtr++;
 				if(currRec == recordPerPage){
 					currRec = 0;
+					pageCtr++;
 					for(int i=0; i<remainderPage; i++){
 						os.write(0);
 					}
@@ -158,7 +164,11 @@ public class dbload{
 				}
 			}
 		}
-		System.out.println("headfile." + pageSize + " has been created.");
+		System.out.println(
+				"headfile." + pageSize + " has been created" +
+				"\nNo of records loaded: " + recordCtr +
+				"\nNo of pages used: " + pageCtr + 
+				"\n");
 	}//main
 
 	//convert state to short
