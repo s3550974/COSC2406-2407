@@ -3,7 +3,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class hashload{
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
 	private static final int NAMESIZE = 200;
 	private static final int RECSIZE = 263;
@@ -54,11 +54,16 @@ public class hashload{
 		
 		//Read heap
 		RandomAccessFile in = null;
+		RandomAccessFile out = null;
 		try{
 			//start timer
 			startTime = System.nanoTime();
-			//declare random access file to read
+			//declare random access file to read and write to
 			in = new RandomAccessFile("heap."+pageSize, "r");
+			out = new RandomAccessFile("hash."+pageSize, "rw");
+			//set length of the hash file to 4 bytes * no. of hash
+			out.setLength(4 * HASH);
+
 			//loop until end of heap file
 			while(true){
 				//declare current offset
@@ -77,6 +82,9 @@ public class hashload{
 					System.out.println("Offset: " + currOffset);
 					System.out.println();
 				}
+				int hashName = getHash(readByte) * 4;
+				out.seek(hashName);
+				out.writeInt(currOffset);
 
 				//increment record and page offset
 				currRec++;

@@ -5,8 +5,7 @@
 Frhed-1.6.0-exe/
 binout.dat
 BUSINESS_NAMES_201804.csv
-heapfile.4096
+*.4096
 *.csv~
 testInput.csv
 testInput2.csv
-heap.4096
