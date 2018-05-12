@@ -3,8 +3,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class hashload{
+	private static final boolean DEBUG = true;
 	private static final int HASH = 3698507;
-	private static final boolean DEBUG = false;
+	private static final int NAMESIZE = 200;
+	private static final int RECSIZE = 263;
 	static int pageSize;
 
 	public static void main (String[] args){
@@ -22,28 +24,10 @@ public class hashload{
 			System.exit(0);
 		}
 
-		//declare size variables 
-		int nameSize = 200;
-		int statusSize = 1;
-		int regDateSize = 10;
-		int cancelDateSize = 10;
-		int renewDateSize = 10;
-		int stateNumSize = 10;
-		int stateRegSize = 2;
-		int abnSize = 20;
-		int recordSize =
-			nameSize + 
-			statusSize +
-			regDateSize +
-			cancelDateSize +
-			renewDateSize +
-			stateNumSize +
-			stateRegSize +
-			abnSize;
 		int pageOffset = 0;
 		int recordOffset = 0;
-		int recordPerPage = pageSize/recordSize;
-		int remainderPage = pageSize%recordSize;
+		int recordPerPage = pageSize/RECSIZE;
+		int remainderPage = pageSize%RECSIZE;
 
 		//counter for current record in page
 		int currRec = 0;
@@ -71,21 +55,28 @@ public class hashload{
 		//Read heap
 		RandomAccessFile in = null;
 		try{
+			//start timer
 			startTime = System.nanoTime();
+			//declare random access file to read
 			in = new RandomAccessFile("heap."+pageSize, "r");
+			//loop until end of heap file
 			while(true){
 				//declare current offset
-				int currOffset = currRec * recordSize + pageOffset * pageSize;
+				int currOffset = currRec * RECSIZE + pageOffset * pageSize;
 				//move to offset
 				in.seek(currOffset);
-				//get the name
-				byte[] readByte = new byte[nameSize];
+				//get the name in bytes
+				byte[] readByte = new byte[NAMESIZE];
 				in.read(readByte);
 
 				//DEBUG
-				System.out.println("Hash: " + getHash(readByte));
-				System.out.println("Offset: " + currOffset);
-				System.out.println();
+				if(DEBUG == true){
+					String name = new String(readByte);
+					System.out.println("Name: " + name);
+					System.out.println("Hash: " + getHash(readByte));
+					System.out.println("Offset: " + currOffset);
+					System.out.println();
+				}
 
 				//increment record and page offset
 				currRec++;
@@ -106,10 +97,13 @@ public class hashload{
 		}finally {
 			if (in != null){
 				try{
+					//close random access file
 					in.close();
+					//calculate passed time
 					endTime = System.nanoTime();
 					totalTime = endTime - startTime;
 					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+					//output passed time
 					System.out.println("hash file generated in " + msTime + " ms.");
 				} catch (IOException e){
 					e.printStackTrace();
@@ -120,7 +114,7 @@ public class hashload{
 	
 	//genereates an array that is 200 bytes long of the name
 	public static byte[] getByteArr(String name){
-		return Arrays.copyOf(name.getBytes(), 200);
+		return Arrays.copyOf(name.getBytes(), NAMESIZE);
 	}
 	//generates a hash value of mode 3698507,
 	public static int getHash(byte[] byteArray){
