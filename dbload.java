@@ -175,7 +175,7 @@ public class dbload{
 		totalTime = endTime - startTime;
 		long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
 		System.out.println(
-				"head." + pageSize + " has been created in " + msTime + "ms." +
+				"head." + pageSize + " has been created in " + msTime + " ms." +
 				"\nNo of records loaded: " + recordCtr +
 				"\nNo of pages used: " + pageCtr + 
 				"\n");
