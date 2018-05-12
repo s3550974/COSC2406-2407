@@ -3,6 +3,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class hashload{
+	private static final int HASH = 3698507;
 	static String query;
 	static int pageSize;
 
@@ -54,25 +55,28 @@ public class hashload{
 		long totalTime = 0;
 
 		//test
-		byte[] testQuery = padByteArray(query);
-		byte[] testPad1 = padByteArray("mellow");
-		byte[] testPad2 = padByteArray("Mellow");
-		int hashVal1 = Arrays.hashCode(testPad1);
-		int hashVal2 = Arrays.hashCode(testPad2);
+		byte[] testQuery = getByteArr(query);
+		byte[] testPad1 = getByteArr("mellow");
+		byte[] testPad2 = getByteArr("mellow");
+		int hashValQ = getHash(testQuery);
+		int hashVal1 = getHash(testPad1);
+		int hashVal2 = getHash(testPad2);
 		if(Arrays.equals(testPad1, testPad2))
 			System.out.println("Test eq");
-		int hashValQ = Arrays.hashCode(testQuery);
-		int hashValQMod = hashValQ % 3698507;
 		System.out.println("Query name: " + query);
 		System.out.println("Query hash: " + hashValQ);
-		System.out.println("Query hashed: " + hashValQMod);
 		System.out.println("Test hash 1: " + hashVal1);
 		System.out.println("Test hash 2: " + hashVal2);
 	}
 	
-	public static byte[] padByteArray(String name){
-		byte[] byteName = name.getBytes();
-		byte[] paddedQuery = Arrays.copyOf(byteName, 200);
+	//genereates a query that is 200 bytes long of the name
+	public static byte[] getByteArr(String name){
+		byte[] paddedQuery = Arrays.copyOf(name.getBytes(), 200);
 		return paddedQuery;
+	}
+	//generates a hash value of mode 3698507,
+	public static int getHash(byte[] byteArray){
+		int hashVal = Math.abs((Arrays.hashCode(byteArray)) % HASH);
+		return hashVal;
 	}
 }//class
