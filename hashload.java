@@ -71,12 +71,10 @@ public class hashload{
 	
 	//genereates a query that is 200 bytes long of the name
 	public static byte[] getByteArr(String name){
-		byte[] paddedQuery = Arrays.copyOf(name.getBytes(), 200);
-		return paddedQuery;
+		return Arrays.copyOf(name.getBytes(), 200);
 	}
 	//generates a hash value of mode 3698507,
 	public static int getHash(byte[] byteArray){
-		int hashVal = Math.abs((Arrays.hashCode(byteArray)) % HASH);
-		return hashVal;
+		return Math.abs((Arrays.hashCode(byteArray)) % HASH);
 	}
 }//class
