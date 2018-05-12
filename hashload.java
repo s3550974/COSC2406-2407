@@ -4,14 +4,13 @@ import java.util.concurrent.TimeUnit;
 
 public class hashload{
 	private static final int HASH = 3698507;
-	static String query;
+	private static final boolean DEBUG = false;
 	static int pageSize;
 
 	public static void main (String[] args){
 		//read terminal arguments
-		if(args.length == 2){
-			query = args[0];
-			String strPage = args[1];
+		if(args.length == 1){
+			String strPage = args[0];
 			try{
 				pageSize = Integer.parseInt(strPage);
 			} catch (IndexOutOfBoundsException e){
@@ -19,7 +18,7 @@ public class hashload{
 				System.exit(0);
 			}
 		}else{
-			System.out.println("2 arguments required, query and file name.");
+			System.out.println("1 argument required, page size.");
 			System.exit(0);
 		}
 
@@ -46,6 +45,9 @@ public class hashload{
 		int recordPerPage = pageSize/recordSize;
 		int remainderPage = pageSize%recordSize;
 
+		//counter for current record in page
+		int currRec = 0;
+
 		//used to check if array is empty
 		byte[] emptyByte = new byte[200];
 		
@@ -55,21 +57,68 @@ public class hashload{
 		long totalTime = 0;
 
 		//test
-		byte[] testQuery = getByteArr(query);
-		byte[] testPad1 = getByteArr("mellow");
-		byte[] testPad2 = getByteArr("mellow");
-		int hashValQ = getHash(testQuery);
-		int hashVal1 = getHash(testPad1);
-		int hashVal2 = getHash(testPad2);
-		if(Arrays.equals(testPad1, testPad2))
-			System.out.println("Test eq");
-		System.out.println("Query name: " + query);
-		System.out.println("Query hash: " + hashValQ);
-		System.out.println("Test hash 1: " + hashVal1);
-		System.out.println("Test hash 2: " + hashVal2);
+		if(DEBUG == true){
+			byte[] testPad1 = getByteArr("mellow");
+			byte[] testPad2 = getByteArr("mellow");
+			int hashVal1 = getHash(testPad1);
+			int hashVal2 = getHash(testPad2);
+			if(Arrays.equals(testPad1, testPad2))
+				System.out.println("Test eq");
+			System.out.println("Test hash 1: " + hashVal1);
+			System.out.println("Test hash 2: " + hashVal2);
+		}
+		
+		//Read heap
+		RandomAccessFile in = null;
+		try{
+			startTime = System.nanoTime();
+			in = new RandomAccessFile("heap."+pageSize, "r");
+			while(true){
+				//declare current offset
+				int currOffset = currRec * recordSize + pageOffset * pageSize;
+				//move to offset
+				in.seek(currOffset);
+				//get the name
+				byte[] readByte = new byte[nameSize];
+				in.read(readByte);
+
+				//DEBUG
+				System.out.println("Hash: " + getHash(readByte));
+				System.out.println("Offset: " + currOffset);
+				System.out.println();
+
+				//increment record and page offset
+				currRec++;
+				if(currRec == recordPerPage){
+					currRec = 0;
+					pageOffset++;
+				}
+				//check if name is empty, empty name implies end of file
+				if(Arrays.equals(readByte, emptyByte)){
+					System.out.println("End of file reached.");
+					break;
+				}
+			}
+		}catch (FileNotFoundException e){
+			e.printStackTrace();
+		}catch (IOException e) {
+			e.printStackTrace();
+		}finally {
+			if (in != null){
+				try{
+					in.close();
+					endTime = System.nanoTime();
+					totalTime = endTime - startTime;
+					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+					System.out.println("hash file generated in " + msTime + " ms.");
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
-	//genereates a query that is 200 bytes long of the name
+	//genereates an array that is 200 bytes long of the name
 	public static byte[] getByteArr(String name){
 		return Arrays.copyOf(name.getBytes(), 200);
 	}
