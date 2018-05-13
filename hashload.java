@@ -3,7 +3,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class hashload{
-	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
 	//private static final int HASH = 8;
 	private static final int NAMESIZE = 200;
@@ -76,15 +75,6 @@ public class hashload{
 				byte[] readByte = new byte[NAMESIZE];
 				in.read(readByte);
 
-				//DEBUG
-				if(DEBUG){
-					String name = new String(readByte);
-					System.out.println("Name: " + name);
-					System.out.println("Hash: " + getHash(readByte));
-					System.out.println("Offset: " + currOffset);
-					System.out.println();
-				}
-
 				//check if read bn_name is empty, empty name implies end of file
 				if(Arrays.equals(readByte, emptyByte)){
 					System.out.println("End of file reached.");
@@ -101,20 +91,8 @@ public class hashload{
 					int bucket = out.readInt();
 					out.seek(hashOffset);
 
-					//DEBUG
-					if(DEBUG){
-						String name = new String(readByte);
-						System.out.println("Trying to insert: " + name);
-						System.out.println("currently at " + hashOffset);
-						System.out.println("bucket: " + bucket);
-						System.out.println("hashName: " + hashName);
-					}
 					//if slot is free, insert
 					if(bucket == -1){
-						if(DEBUG){
-							System.out.println("passed -1 check");
-							System.out.println("inserting offset " + currOffset + " into hash at " + hashOffset);
-						}
 						ctrIns++;
 						out.writeInt(currOffset);
 						break;
