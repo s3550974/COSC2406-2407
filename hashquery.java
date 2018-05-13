@@ -75,13 +75,87 @@ public class hashquery{
 					//obtain the name from the hash pointer
 					heapIn.read(heapName);
 					if(Arrays.equals(heapName, byteQuery)){
+						String name = new String(heapName);
+						System.out.println("Pointer: " + hashPointer);
+						//declare strings to be printed
+						String bn_name;
+						String bn_status;
+						String bn_reg_dt;
+						String bn_cancel_dt;
+						String bn_renew_dt;
+						String bn_state_num;
+						String bn_state_of_reg;
+						String bn_abn;
+
+						//give name value
+						bn_name = name;
+						//give status a value
+						heapIn.seek(hashPointer + NAMESIZE);
+						boolean bolStatus = heapIn.readBoolean();
+						if(bolStatus)
+							bn_status = "Registered";
+						else
+							bn_status = "Deregistered";
+						//give reg date a value
+						heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE);
+						byte[] readRegDate = new byte[REGDATESIZE];
+						heapIn.read(readRegDate);
+						bn_reg_dt = new String(readRegDate);
+						
+						//give cancel date a value
+						heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE + REGDATESIZE);
+						byte[] readCancelDate = new byte[CANCELDATESIZE];
+						heapIn.read(readCancelDate);
+						bn_cancel_dt = new String(readCancelDate);
+
+						//give renew date a value
+						heapIn.seek(
+							hashPointer + NAMESIZE + STATUSSIZE + 
+							REGDATESIZE + CANCELDATESIZE);
+						byte[] readRenewDate = new byte[RENEWDATESIZE];
+						heapIn.read(readRenewDate);
+						bn_renew_dt = new String(readRenewDate);
+
+						//give state number a value
+						heapIn.seek(
+							hashPointer + NAMESIZE + STATUSSIZE + 
+							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE);
+						byte[] readStateNum = new byte[STATENUMSIZE];
+						heapIn.read(readStateNum);
+						bn_state_num = new String(readStateNum);
+
+						//give state of reg a value
+						heapIn.seek(
+							hashPointer + NAMESIZE + STATUSSIZE + 
+							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
+							STATENUMSIZE);
+						short shtState = heapIn.readShort();
+						bn_state_of_reg = mapState.get(shtState);
+						
+						//give abn a value
+						heapIn.seek(
+							hashPointer + NAMESIZE + STATUSSIZE + 
+							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
+							STATENUMSIZE + STATEREGSIZE);
+						byte[] readABN = new byte[ABNSIZE];
+						heapIn.read(readABN);
+						bn_abn = new String(readABN);
+
 						endTime = System.nanoTime();
 						totalTime = endTime - startTime;
 						long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
-						System.out.println("Query found in " + msTime + " ms.");
-						String name = new String(heapName);
-						System.out.println("Name: " + name);
-						System.out.println("Pointer: " + hashPointer);
+						//print!
+						System.out.println(
+							"Query found in " + msTime + " ms" +
+							"\nBusiness name: " + bn_name +
+							"\nRegister status: " + bn_status +
+							"\nRegister date: " + bn_reg_dt +
+							"\nCancel date: " + bn_cancel_dt +
+							"\nRenew date: " + bn_renew_dt +
+							"\nState number: " + bn_state_num +
+							"\nState of registration: " + bn_state_of_reg +
+							"\nABN: " + bn_abn +
+							"\n");
 					}
 				}
 

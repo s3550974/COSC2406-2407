@@ -145,8 +145,7 @@ public class dbquery{
 					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
 					//print!
 					System.out.println(
-						"Query found at page " + pageOffset + ", record " + currRec +
-						" in " + msTime + " ms" +
+						"Query found in " + msTime + " ms" +
 						"\nBusiness name: " + bn_name +
 						"\nRegister status: " + bn_status +
 						"\nRegister date: " + bn_reg_dt +
