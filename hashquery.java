@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 public class hashquery{
 	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
+	private static final int INTBYTES = 4;
 	private static final int NAMESIZE = 200;
 	private static final int STATUSSIZE = 1;
 	private static final int REGDATESIZE = 10;
@@ -39,13 +40,8 @@ public class hashquery{
 		int recordPerPage = pageSize/RECSIZE;
 		int remainderPage = pageSize%RECSIZE;
 
-		//convert query to byte array
-		byte[] byteQuery = getByteArr(query);
 		//used to check if array is empty
 		byte[] emptyByte = new byte[200];
-		
-		//counter for current record in page
-		int currRec = 0;
 		
 		//declare time to see how long queries take
 		long startTime = 0;
@@ -55,6 +51,8 @@ public class hashquery{
 		//Random Access File to move to and fro of a binary file
 		RandomAccessFile heapIn = null;
 		RandomAccessFile hashIn = null;
+		//convert query to byte array
+		byte[] byteQuery = getByteArr(query);
 		try{
 			//time
 			startTime = System.nanoTime();
@@ -62,28 +60,38 @@ public class hashquery{
 			hashIn = new RandomAccessFile("hash."+pageSize, "r");
 			heapIn = new RandomAccessFile("heap."+pageSize, "r");
 			//declare the initial offset of the hash from the hashcode
-			int currOffset = getHash(byteQuery) * 4;
+			int initOffset = getHash(byteQuery) * INTBYTES;
+			int currOffset = initOffset;
 			//loop until end of file or found
 			while(true){
 				//move to hash offset
 				hashIn.seek(currOffset);
 				//read the pointer to heap
 				int hashPointer = hashIn.readInt();
-				//move to heap offset with the pointer
-				heapIn.seek(hashPointer);
-				//obtain the name from the hash pointer
 				byte[] heapName = new byte[200];
-				heapIn.read(heapName);
-				String name = new String(heapName);
-				System.out.println("Name: " + name);
-				System.out.println("Pointer: " + hashPointer);
-
-				//increment record and page offset
-				currRec++;
-				if(currRec == recordPerPage){
-					currRec = 0;
-					pageOffset++;
+				if(hashPointer > -1){
+					//move to heap offset with the pointer
+					heapIn.seek(hashPointer);
+					//obtain the name from the hash pointer
+					heapIn.read(heapName);
+					if(Arrays.equals(heapName, byteQuery)){
+						endTime = System.nanoTime();
+						totalTime = endTime - startTime;
+						long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+						System.out.println("Query found in " + msTime + " ms.");
+						String name = new String(heapName);
+						System.out.println("Name: " + name);
+						System.out.println("Pointer: " + hashPointer);
+					}
 				}
+
+				currOffset = currOffset + INTBYTES;
+
+				if(currOffset > (HASH - 1) * INTBYTES){
+					//move to beginning
+					currOffset = 0;
+				}
+
 				//check if name is empty, empty name implies end of file
 				/*
 				if(Arrays.equals(readByte, emptyByte)){
@@ -91,7 +99,7 @@ public class hashquery{
 					break;
 				}
 				*/
-				break;
+				//break;
 			}
 		}catch (FileNotFoundException e){
 			e.printStackTrace();
@@ -101,11 +109,13 @@ public class hashquery{
 			if (hashIn != null){
 				try{
 					hashIn.close();
-					hashIn.close();
-					endTime = System.nanoTime();
-					totalTime = endTime - startTime;
-					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
-					System.out.println("Queries found in " + msTime + " ms.");
+				} catch (IOException e){
+					e.printStackTrace();
+				}
+			}
+			if (heapIn != null){
+				try{
+					heapIn.close();
 				} catch (IOException e){
 					e.printStackTrace();
 				}
