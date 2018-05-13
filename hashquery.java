@@ -6,6 +6,13 @@ public class hashquery{
 	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
 	private static final int NAMESIZE = 200;
+	private static final int STATUSSIZE = 1;
+	private static final int REGDATESIZE = 10;
+	private static final int CANCELDATESIZE = 10;
+	private static final int RENEWDATESIZE = 10;
+	private static final int STATENUMSIZE = 10;
+	private static final int STATEREGSIZE = 2;
+	private static final int ABNSIZE = 20;
 	private static final int RECSIZE = 263;
 	static String query;
 	static int pageSize;
@@ -27,31 +34,13 @@ public class hashquery{
 		}
 
 		//declare size variables 
-		int nameSize = 200;
-		int statusSize = 1;
-		int regDateSize = 10;
-		int cancelDateSize = 10;
-		int renewDateSize = 10;
-		int stateNumSize = 10;
-		int stateRegSize = 2;
-		int abnSize = 20;
-		int recordSize =
-			nameSize + 
-			statusSize +
-			regDateSize +
-			cancelDateSize +
-			renewDateSize +
-			stateNumSize +
-			stateRegSize +
-			abnSize;
 		int pageOffset = 0;
 		int recordOffset = 0;
-		int recordPerPage = pageSize/recordSize;
-		int remainderPage = pageSize%recordSize;
+		int recordPerPage = pageSize/RECSIZE;
+		int remainderPage = pageSize%RECSIZE;
 
 		//convert query to byte array
-		byte[] byteQuery = query.getBytes();
-		byte[] paddedQuery = Arrays.copyOf(byteQuery, nameSize);
+		byte[] byteQuery = getByteArr(query);
 		//used to check if array is empty
 		byte[] emptyByte = new byte[200];
 		
@@ -67,19 +56,28 @@ public class hashquery{
 		RandomAccessFile heapIn = null;
 		RandomAccessFile hashIn = null;
 		try{
+			//time
 			startTime = System.nanoTime();
+			//declare random acces files for heap and hash files
 			hashIn = new RandomAccessFile("hash."+pageSize, "r");
+			heapIn = new RandomAccessFile("heap."+pageSize, "r");
+			//declare the initial offset of the hash from the hashcode
+			int currOffset = getHash(byteQuery) * 4;
+			//loop until end of file or found
 			while(true){
-				//declare current offset
-				int currOffset = currRec * recordSize + pageOffset * pageSize;
-				//move to offset
+				//move to hash offset
 				hashIn.seek(currOffset);
-				//get the name
-				byte[] readByte = new byte[nameSize];
-				hashIn.read(readByte);
-				//if name matches query
-				if(Arrays.equals(readByte, paddedQuery)){
-				}
+				//read the pointer to heap
+				int hashPointer = hashIn.readInt();
+				//move to heap offset with the pointer
+				heapIn.seek(hashPointer);
+				//obtain the name from the hash pointer
+				byte[] heapName = new byte[200];
+				heapIn.read(heapName);
+				String name = new String(heapName);
+				System.out.println("Name: " + name);
+				System.out.println("Pointer: " + hashPointer);
+
 				//increment record and page offset
 				currRec++;
 				if(currRec == recordPerPage){
@@ -87,10 +85,13 @@ public class hashquery{
 					pageOffset++;
 				}
 				//check if name is empty, empty name implies end of file
+				/*
 				if(Arrays.equals(readByte, emptyByte)){
 					System.out.println("End of file reached.");
 					break;
 				}
+				*/
+				break;
 			}
 		}catch (FileNotFoundException e){
 			e.printStackTrace();
@@ -99,6 +100,7 @@ public class hashquery{
 		}finally {
 			if (hashIn != null){
 				try{
+					hashIn.close();
 					hashIn.close();
 					endTime = System.nanoTime();
 					totalTime = endTime - startTime;
