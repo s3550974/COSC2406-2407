@@ -7,6 +7,7 @@ public class hashload{
 	private static final int HASH = 3698507;
 	private static final int NAMESIZE = 200;
 	private static final int RECSIZE = 263;
+	private static final int INTBYTES = 4;
 	static int pageSize;
 
 	public static void main (String[] args){
@@ -24,6 +25,7 @@ public class hashload{
 			System.exit(0);
 		}
 
+		//declare offset variables
 		int pageOffset = 0;
 		int recordOffset = 0;
 		int recordPerPage = pageSize/RECSIZE;
@@ -39,18 +41,6 @@ public class hashload{
 		long startTime = 0;
 		long endTime = 0;
 		long totalTime = 0;
-
-		//test
-		if(DEBUG == true){
-			byte[] testPad1 = getByteArr("mellow");
-			byte[] testPad2 = getByteArr("mellow");
-			int hashVal1 = getHash(testPad1);
-			int hashVal2 = getHash(testPad2);
-			if(Arrays.equals(testPad1, testPad2))
-				System.out.println("Test eq");
-			System.out.println("Test hash 1: " + hashVal1);
-			System.out.println("Test hash 2: " + hashVal2);
-		}
 		
 		//Read heap
 		RandomAccessFile in = null;
@@ -58,11 +48,22 @@ public class hashload{
 		try{
 			//start timer
 			startTime = System.nanoTime();
+			//progress output text
+			System.out.println("Initialising hash."+pageSize+"...");
 			//declare random access file to read and write to
 			in = new RandomAccessFile("heap."+pageSize, "r");
 			out = new RandomAccessFile("hash."+pageSize, "rw");
-			//set length of the hash file to 4 bytes * no. of hash
-			out.setLength(4 * HASH);
+
+			//initilaise the hash file to all -1s
+			for(int i = 0; i <= HASH - 1; i++)
+				out.writeInt(-1);
+			//out.setLength((HASH - 1) * INTBYTES);
+
+			//progress output text
+			System.out.println("Hashing into hash."+pageSize+" from heap."+pageSize+"...");
+			//counter to keep track of collisions, debugging purposes
+			int ctrCol = 0;
+			int ctrIns = 0;
 
 			//loop until end of heap file
 			while(true){
@@ -70,21 +71,49 @@ public class hashload{
 				int currOffset = currRec * RECSIZE + pageOffset * pageSize;
 				//move to offset
 				in.seek(currOffset);
-				//get the name in bytes
+				//get the bn_name in bytes
 				byte[] readByte = new byte[NAMESIZE];
 				in.read(readByte);
 
 				//DEBUG
-				if(DEBUG == true){
+				if(DEBUG){
 					String name = new String(readByte);
 					System.out.println("Name: " + name);
 					System.out.println("Hash: " + getHash(readByte));
 					System.out.println("Offset: " + currOffset);
 					System.out.println();
 				}
-				int hashName = getHash(readByte) * 4;
-				out.seek(hashName);
-				out.writeInt(currOffset);
+
+				//write to hash file
+				int hashName = getHash(readByte) * INTBYTES;
+				int hashOffset = hashName;
+				out.seek(hashOffset);
+				while(true){
+					//if slot is free, insert
+					if(out.readInt() == -1){
+						ctrIns++;
+						out.writeInt(currOffset);
+						break;
+					}else{
+						ctrCol++;
+						//increment offset by int byte
+						hashOffset = hashOffset + INTBYTES;
+						//check if passed the file size
+						if(hashOffset >= HASH * INTBYTES){
+							//move to beginning
+							hashOffset = 0;
+						}
+						//check if hash file is full
+						if(hashOffset == hashName){
+							//terminate program
+							System.out.println("ERROR ADDING HASH, HASH FILE IS FULL");
+							System.out.println("TERMINATING PROGRAM");
+							System.exit(0);
+						}
+						//move to new offset
+						out.seek(hashOffset);
+					}
+				}
 
 				//increment record and page offset
 				currRec++;
@@ -92,9 +121,11 @@ public class hashload{
 					currRec = 0;
 					pageOffset++;
 				}
-				//check if name is empty, empty name implies end of file
+				//check if read bn_name is empty, empty name implies end of file
 				if(Arrays.equals(readByte, emptyByte)){
 					System.out.println("End of file reached.");
+					System.out.println("No of insertions: " + ctrIns);
+					System.out.println("No of collisions: " + ctrCol);
 					break;
 				}
 			}
