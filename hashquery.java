@@ -80,14 +80,14 @@ public class hashquery{
 						printRecord(heapIn, heapName, hashPointer);
 					}
 				}
-
+				//increment the offset by one int size
 				currOffset = currOffset + INTBYTES;
-
+				//if the current offset excedes the size of the hash index
 				if(currOffset > (HASH - 1) * INTBYTES){
-					//move to beginning
+					//move to back to the beginning
 					currOffset = 0;
 				}
-
+				//if the while loop has one full loop around the heapfile
 				if(currOffset == initOffset){
 					//terminate program
 					endTime = System.nanoTime();
