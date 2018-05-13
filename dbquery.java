@@ -140,9 +140,13 @@ public class dbquery{
 					in.read(readABN);
 					bn_abn = new String(readABN);
 
+					endTime = System.nanoTime();
+					totalTime = endTime - startTime;
+					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
 					//print!
 					System.out.println(
 						"Query found at page " + pageOffset + ", record " + currRec +
+						" in " + msTime + " ms" +
 						"\nBusiness name: " + bn_name +
 						"\nRegister status: " + bn_status +
 						"\nRegister date: " + bn_reg_dt +
@@ -161,7 +165,10 @@ public class dbquery{
 				}
 				//check if name is empty, empty name implies end of file
 				if(Arrays.equals(readByte, emptyByte)){
-					System.out.println("End of file reached.");
+					endTime = System.nanoTime();
+					totalTime = endTime - startTime;
+					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+					System.out.println("End of file reached in " + msTime + " ms.");
 					break;
 				}
 			}
@@ -173,10 +180,6 @@ public class dbquery{
 			if (in != null){
 				try{
 					in.close();
-					endTime = System.nanoTime();
-					totalTime = endTime - startTime;
-					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
-					System.out.println("Queries found in " + msTime + " ms.");
 				} catch (IOException e){
 					e.printStackTrace();
 				}
