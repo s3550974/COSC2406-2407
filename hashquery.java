@@ -3,7 +3,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class hashquery{
-	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
 	private static final int INTBYTES = 4;
 	private static final int NAMESIZE = 200;
@@ -17,6 +16,11 @@ public class hashquery{
 	private static final int RECSIZE = 263;
 	static String query;
 	static int pageSize;
+		
+	//declare time to see how long queries take
+	static long startTime = 0;
+	static long endTime = 0;
+	static long totalTime = 0;
 
 	public static void main (String[] args){
 		//read terminal arguments
@@ -26,11 +30,11 @@ public class hashquery{
 			try{
 				pageSize = Integer.parseInt(strPage);
 			} catch (IndexOutOfBoundsException e){
-				System.out.println("Page size must be an integer.");
+				System.err.println("Page size must be an integer.");
 				System.exit(0);
 			}
 		}else{
-			System.out.println("2 arguments required, query and file name.");
+			System.err.println("2 arguments required, query and file name.");
 			System.exit(0);
 		}
 
@@ -42,15 +46,11 @@ public class hashquery{
 
 		//used to check if array is empty
 		byte[] emptyByte = new byte[200];
-		
-		//declare time to see how long queries take
-		long startTime = 0;
-		long endTime = 0;
-		long totalTime = 0;
 
-		//Random Access File to move to and fro of a binary file
+		//Random Access File to move to and fro the heap and hash files
 		RandomAccessFile heapIn = null;
 		RandomAccessFile hashIn = null;
+
 		//convert query to byte array
 		byte[] byteQuery = getByteArr(query);
 		try{
@@ -69,93 +69,15 @@ public class hashquery{
 				//read the pointer to heap
 				int hashPointer = hashIn.readInt();
 				byte[] heapName = new byte[200];
+				//if the pointer is valid
 				if(hashPointer > -1){
 					//move to heap offset with the pointer
 					heapIn.seek(hashPointer);
 					//obtain the name from the hash pointer
 					heapIn.read(heapName);
+					//if query is found
 					if(Arrays.equals(heapName, byteQuery)){
-						String name = new String(heapName);
-						System.out.println("Pointer: " + hashPointer);
-						//declare strings to be printed
-						String bn_name;
-						String bn_status;
-						String bn_reg_dt;
-						String bn_cancel_dt;
-						String bn_renew_dt;
-						String bn_state_num;
-						String bn_state_of_reg;
-						String bn_abn;
-
-						//give name value
-						bn_name = name;
-						//give status a value
-						heapIn.seek(hashPointer + NAMESIZE);
-						boolean bolStatus = heapIn.readBoolean();
-						if(bolStatus)
-							bn_status = "Registered";
-						else
-							bn_status = "Deregistered";
-						//give reg date a value
-						heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE);
-						byte[] readRegDate = new byte[REGDATESIZE];
-						heapIn.read(readRegDate);
-						bn_reg_dt = new String(readRegDate);
-						
-						//give cancel date a value
-						heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE + REGDATESIZE);
-						byte[] readCancelDate = new byte[CANCELDATESIZE];
-						heapIn.read(readCancelDate);
-						bn_cancel_dt = new String(readCancelDate);
-
-						//give renew date a value
-						heapIn.seek(
-							hashPointer + NAMESIZE + STATUSSIZE + 
-							REGDATESIZE + CANCELDATESIZE);
-						byte[] readRenewDate = new byte[RENEWDATESIZE];
-						heapIn.read(readRenewDate);
-						bn_renew_dt = new String(readRenewDate);
-
-						//give state number a value
-						heapIn.seek(
-							hashPointer + NAMESIZE + STATUSSIZE + 
-							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE);
-						byte[] readStateNum = new byte[STATENUMSIZE];
-						heapIn.read(readStateNum);
-						bn_state_num = new String(readStateNum);
-
-						//give state of reg a value
-						heapIn.seek(
-							hashPointer + NAMESIZE + STATUSSIZE + 
-							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
-							STATENUMSIZE);
-						short shtState = heapIn.readShort();
-						bn_state_of_reg = mapState.get(shtState);
-						
-						//give abn a value
-						heapIn.seek(
-							hashPointer + NAMESIZE + STATUSSIZE + 
-							REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
-							STATENUMSIZE + STATEREGSIZE);
-						byte[] readABN = new byte[ABNSIZE];
-						heapIn.read(readABN);
-						bn_abn = new String(readABN);
-
-						endTime = System.nanoTime();
-						totalTime = endTime - startTime;
-						long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
-						//print!
-						System.out.println(
-							"Query found in " + msTime + " ms" +
-							"\nBusiness name: " + bn_name +
-							"\nRegister status: " + bn_status +
-							"\nRegister date: " + bn_reg_dt +
-							"\nCancel date: " + bn_cancel_dt +
-							"\nRenew date: " + bn_renew_dt +
-							"\nState number: " + bn_state_num +
-							"\nState of registration: " + bn_state_of_reg +
-							"\nABN: " + bn_abn +
-							"\n");
+						printRecord(heapIn, heapName, hashPointer);
 					}
 				}
 
@@ -166,14 +88,14 @@ public class hashquery{
 					currOffset = 0;
 				}
 
-				//check if name is empty, empty name implies end of file
-				/*
-				if(Arrays.equals(readByte, emptyByte)){
-					System.out.println("End of file reached.");
+				if(currOffset == initOffset){
+					//terminate program
+					endTime = System.nanoTime();
+					totalTime = endTime - startTime;
+					long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+					System.out.println("End of file reached in " + msTime + " ms.");
 					break;
 				}
-				*/
-				//break;
 			}
 		}catch (FileNotFoundException e){
 			e.printStackTrace();
@@ -196,6 +118,92 @@ public class hashquery{
 			}
 		}
 	}//main
+
+	//Prints the record from a heap file given an offset
+	public static void printRecord(RandomAccessFile heapIn, byte[] heapName, int hashPointer){
+		try{
+			String name = new String(heapName);
+			//declare strings to be printed
+			String bn_name;
+			String bn_status;
+			String bn_reg_dt;
+			String bn_cancel_dt;
+			String bn_renew_dt;
+			String bn_state_num;
+			String bn_state_of_reg;
+			String bn_abn;
+
+			//give name value
+			bn_name = name;
+			//give status a value
+			heapIn.seek(hashPointer + NAMESIZE);
+			boolean bolStatus = heapIn.readBoolean();
+			if(bolStatus)
+				bn_status = "Registered";
+			else
+				bn_status = "Deregistered";
+			//give reg date a value
+			heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE);
+			byte[] readRegDate = new byte[REGDATESIZE];
+			heapIn.read(readRegDate);
+			bn_reg_dt = new String(readRegDate);
+			//give cancel date a value
+			heapIn.seek(hashPointer + NAMESIZE + STATUSSIZE + REGDATESIZE);
+			byte[] readCancelDate = new byte[CANCELDATESIZE];
+			heapIn.read(readCancelDate);
+			bn_cancel_dt = new String(readCancelDate);
+			//give renew date a value
+			heapIn.seek(
+				hashPointer + NAMESIZE + STATUSSIZE + 
+				REGDATESIZE + CANCELDATESIZE);
+			byte[] readRenewDate = new byte[RENEWDATESIZE];
+			heapIn.read(readRenewDate);
+			bn_renew_dt = new String(readRenewDate);
+			//give state number a value
+			heapIn.seek(
+				hashPointer + NAMESIZE + STATUSSIZE + 
+				REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE);
+			byte[] readStateNum = new byte[STATENUMSIZE];
+			heapIn.read(readStateNum);
+			bn_state_num = new String(readStateNum);
+			//give state of reg a value
+			heapIn.seek(
+				hashPointer + NAMESIZE + STATUSSIZE + 
+				REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
+				STATENUMSIZE);
+			short shtState = heapIn.readShort();
+			bn_state_of_reg = mapState.get(shtState);
+			//give abn a value
+			heapIn.seek(
+				hashPointer + NAMESIZE + STATUSSIZE + 
+				REGDATESIZE + CANCELDATESIZE + RENEWDATESIZE +
+				STATENUMSIZE + STATEREGSIZE);
+			byte[] readABN = new byte[ABNSIZE];
+			heapIn.read(readABN);
+			bn_abn = new String(readABN);
+
+			endTime = System.nanoTime();
+			totalTime = endTime - startTime;
+			long msTime = TimeUnit.NANOSECONDS.toMillis(totalTime);
+			//print!
+			System.out.println(
+				"Query found in " + msTime + " ms" +
+				"\nBusiness name: " + bn_name +
+				"\nRegister status: " + bn_status +
+				"\nRegister date: " + bn_reg_dt +
+				"\nCancel date: " + bn_cancel_dt +
+				"\nRenew date: " + bn_renew_dt +
+				"\nState number: " + bn_state_num +
+				"\nState of registration: " + bn_state_of_reg +
+				"\nABN: " + bn_abn +
+				"\n"
+			);
+		}catch (FileNotFoundException e){
+			e.printStackTrace();
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	//convert short int to state 
 	private static final Map<Short, String> mapState = new HashMap<Short, String>();

@@ -17,11 +17,11 @@ public class hashload{
 			try{
 				pageSize = Integer.parseInt(strPage);
 			} catch (IndexOutOfBoundsException e){
-				System.out.println("Page size must be an integer.");
+				System.err.println("Page size must be an integer.");
 				System.exit(0);
 			}
 		}else{
-			System.out.println("1 argument required, page size.");
+			System.err.println("1 argument required, page size.");
 			System.exit(0);
 		}
 
@@ -108,12 +108,10 @@ public class hashload{
 						//check if hash file is full
 						if(hashOffset == hashName){
 							//terminate program
-							System.out.println("ERROR ADDING HASH, HASH FILE IS FULL");
-							System.out.println("TERMINATING PROGRAM");
+							System.err.println("ERROR ADDING HASH, HASH FILE IS FULL");
+							System.err.println("TERMINATING PROGRAM");
 							System.exit(0);
 						}
-						//move to new offset
-						//out.seek(hashOffset);
 					}
 				}
 
