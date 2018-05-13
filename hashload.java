@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 public class hashload{
 	private static final boolean DEBUG = false;
 	private static final int HASH = 3698507;
+	//private static final int HASH = 8;
 	private static final int NAMESIZE = 200;
 	private static final int RECSIZE = 263;
 	private static final int INTBYTES = 4;
@@ -55,7 +56,7 @@ public class hashload{
 			out = new RandomAccessFile("hash."+pageSize, "rw");
 
 			//initilaise the hash file to all -1s
-			for(int i = 0; i <= HASH - 1; i++)
+			for(int i = 0; i < HASH; i++)
 				out.writeInt(-1);
 			//out.setLength((HASH - 1) * INTBYTES);
 
@@ -84,13 +85,36 @@ public class hashload{
 					System.out.println();
 				}
 
+				//check if read bn_name is empty, empty name implies end of file
+				if(Arrays.equals(readByte, emptyByte)){
+					System.out.println("End of file reached.");
+					System.out.println("No of insertions: " + ctrIns);
+					System.out.println("No of collisions: " + ctrCol);
+					break;
+				}
+
 				//write to hash file
 				int hashName = getHash(readByte) * INTBYTES;
 				int hashOffset = hashName;
-				out.seek(hashOffset);
 				while(true){
+					out.seek(hashOffset);
+					int bucket = out.readInt();
+					out.seek(hashOffset);
+
+					//DEBUG
+					if(DEBUG){
+						String name = new String(readByte);
+						System.out.println("Trying to insert: " + name);
+						System.out.println("currently at " + hashOffset);
+						System.out.println("bucket: " + bucket);
+						System.out.println("hashName: " + hashName);
+					}
 					//if slot is free, insert
-					if(out.readInt() == -1){
+					if(bucket == -1){
+						if(DEBUG){
+							System.out.println("passed -1 check");
+							System.out.println("inserting offset " + currOffset + " into hash at " + hashOffset);
+						}
 						ctrIns++;
 						out.writeInt(currOffset);
 						break;
@@ -99,7 +123,7 @@ public class hashload{
 						//increment offset by int byte
 						hashOffset = hashOffset + INTBYTES;
 						//check if passed the file size
-						if(hashOffset >= HASH * INTBYTES){
+						if(hashOffset > (HASH - 1) * INTBYTES){
 							//move to beginning
 							hashOffset = 0;
 						}
@@ -111,7 +135,7 @@ public class hashload{
 							System.exit(0);
 						}
 						//move to new offset
-						out.seek(hashOffset);
+						//out.seek(hashOffset);
 					}
 				}
 
@@ -120,13 +144,6 @@ public class hashload{
 				if(currRec == recordPerPage){
 					currRec = 0;
 					pageOffset++;
-				}
-				//check if read bn_name is empty, empty name implies end of file
-				if(Arrays.equals(readByte, emptyByte)){
-					System.out.println("End of file reached.");
-					System.out.println("No of insertions: " + ctrIns);
-					System.out.println("No of collisions: " + ctrCol);
-					break;
 				}
 			}
 		}catch (FileNotFoundException e){
